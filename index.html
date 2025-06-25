@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Charleston Street Guide Map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoid2pydXBwZWwiLCJhIjoiY21jMmN6YWkyMDdkMzJtcTV2Y25ibXRycyJ9.LcKQXsI9YAzf_FjzRA3H5g';
+
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-79.9311, 32.7765],
+    zoom: 13
+  });
+
+  map.addControl(new mapboxgl.NavigationControl());
+
+  map.on('load', () => {
+    map.addSource('charleston-data', {
+      type: 'geojson',
+      data: 'charleston_street_guide.geojson'
+    });
+
+    map.addLayer({
+      id: 'street-guide-layer',
+      type: 'line',
+      source: 'charleston-data',
+      paint: {
+        'line-color': '#FF6347',
+        'line-width': 2
+      }
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        position => {
+          const userLngLat = [position.coords.longitude, position.coords.latitude];
+
+          const el = document.createElement('div');
+          el.className = 'marker';
+          el.style.width = '20px';
+          el.style.height = '20px';
+          el.style.backgroundColor = '#007cbf';
+          el.style.borderRadius = '50%';
+
+          new mapboxgl.Marker(el)
+            .setLngLat(userLngLat)
+            .addTo(map);
+
+          map.flyTo({ center: userLngLat, zoom: 15 });
+        },
+        error => console.error(error),
+        { enableHighAccuracy: true }
+      );
+    }
+  });
+</script>
+</body>
+</html>
